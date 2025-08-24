@@ -1180,7 +1180,7 @@
             // 
             label9.AutoSize = true;
             label9.Font = new Font("Arial Narrow", 15.75F, FontStyle.Regular, GraphicsUnit.Point,  0);
-            label9.Location = new Point(431, 232);
+            label9.Location = new Point(436, 85);
             label9.Name = "label9";
             label9.Size = new Size(134, 25);
             label9.TabIndex = 25;

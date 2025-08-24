@@ -42,6 +42,8 @@ namespace SubSpectra {
         private readonly int maxFrames = 50; // change the number of frames to test on a video
         private readonly int cell_width = 30; // change the width of the column "Frame" from the excel file
 
+        private string img_5_path;
+
         public void init_panels() {
             panels[0] = panel_create_image;
             panels[1] = panel_create_video;
@@ -1208,8 +1210,8 @@ namespace SubSpectra {
                 wsChi.Cell(1, 1).Value = "Frame";
                 wsRS.Cell(1, 1).Value = "Frame";
 
-                wsChi.Column(1).Width = 30;
-                wsRS.Column(1).Width = 30;
+                wsChi.Column(1).Width = cell_width;
+                wsRS.Column(1).Width = cell_width;
 
                 for (int b = 0; b <= 1; b++) {
                     wsChi.Cell(1, b + 2).Value = $"Bit {b}";
@@ -1255,15 +1257,147 @@ namespace SubSpectra {
         }
 
         private void btn_5_select_Click(object sender, EventArgs e) {
-
+            using (OpenFileDialog ofd = new OpenFileDialog()) {
+                ofd.Filter = "Image Files|*.png;*.jpg";
+                if (ofd.ShowDialog() == DialogResult.OK) {
+                    img_5_path = ofd.FileName;
+                    img_5_select.Image = Image.FromFile(img_5_path);
+                }
+            }
         }
 
         private void btn_5_start_Click(object sender, EventArgs e) {
+            if (string.IsNullOrEmpty(img_5_path) || !File.Exists(img_5_path)) {
+                MessageBox.Show("Please select a valid image first.");
+                return;
+            }
 
+            Bitmap original = new Bitmap(img_5_path);
+            string baseName = Path.GetFileNameWithoutExtension(img_5_path);
+            string folder = Path.Combine(Path.GetDirectoryName(img_5_path), baseName + "_filters");
+            Directory.CreateDirectory(folder);
+
+            // remove each bit layer for each channel
+            for (int c = 0; c < 4; c++) { // R = 0, G = 1, B = 2, A = 3
+                for (int bit = 0; bit < 8; bit++) {
+                    Bitmap copy = new Bitmap(original.Width, original.Height);
+                    for (int y = 0; y < original.Height; y++) {
+                        for (int x = 0; x < original.Width; x++) {
+                            System.Drawing.Color px = original.GetPixel(x, y);
+                            byte[] channels = new byte[] { px.R, px.G, px.B, px.A };
+                            
+                            channels[c] = (byte) (channels[c] & ~(1 << bit));
+                            
+                            System.Drawing.Color newColor = System.Drawing.Color.FromArgb(channels[3], channels[0], channels[1], channels[2]);
+                            copy.SetPixel(x, y, newColor);
+                        }
+                    }
+                    copy.Save(Path.Combine(folder, $"{baseName}_{"RGBA"[c]}_bit{bit}_removed.png"));
+                }
+            }
+
+            // red, green, blue filters
+            void ApplyColorFilter(Func<System.Drawing.Color, System.Drawing.Color> filterFunc, string suffix) {
+                Bitmap copy = new Bitmap(original.Width, original.Height);
+                for (int y = 0; y < original.Height; y++)
+                    for (int x = 0; x < original.Width; x++)
+                        copy.SetPixel(x, y, filterFunc(original.GetPixel(x, y)));
+                copy.Save(Path.Combine(folder, $"{baseName}_{suffix}.png"));
+            }
+
+            ApplyColorFilter(px => System.Drawing.Color.FromArgb(px.A, px.R, 0, 0), "red");
+            ApplyColorFilter(px => System.Drawing.Color.FromArgb(px.A, 0, px.G, 0), "green");
+            ApplyColorFilter(px => System.Drawing.Color.FromArgb(px.A, 0, 0, px.B), "blue");
+
+            // gray
+            ApplyColorFilter(px => {
+                int gray = (px.R + px.G + px.B) / 3;
+                return System.Drawing.Color.FromArgb(px.A, gray, gray, gray);
+            }, "gray");
+
+
+            // black and white
+            ApplyColorFilter(px => {
+                int avg = (px.R + px.G + px.B) / 3;
+                return avg > 127 ? System.Drawing.Color.White : System.Drawing.Color.Black;
+            }, "bw");
+
+
+            // sepia
+            ApplyColorFilter(px => {
+                int r = (int) (px.R * 0.393 + px.G * 0.769 + px.B * 0.189);
+                int g = (int) (px.R * 0.349 + px.G * 0.686 + px.B * 0.168);
+                int b = (int) (px.R * 0.272 + px.G * 0.534 + px.B * 0.131);
+                return System.Drawing.Color.FromArgb(px.A, Math.Min(r, 255), Math.Min(g, 255), Math.Min(b, 255));
+            }, "sepia");
+
+
+            // average of n x n blocks
+            void BlockAverage(int blockSize, string suffix) {
+                Bitmap result = new Bitmap(original.Width, original.Height);
+                for (int y = 0; y < original.Height; y++) {
+                    for (int x = 0; x < original.Width; x++) {
+                        int rs = 0, gs = 0, bs = 0, count = 0;
+                        for (int dy = -blockSize / 2; dy <= blockSize / 2; dy++) {
+                            for (int dx = -blockSize / 2; dx <= blockSize / 2; dx++) {
+                                int nx = x + dx, ny = y + dy;
+                                if (nx >= 0 && ny >= 0 && nx < original.Width && ny < original.Height) {
+                                    System.Drawing.Color npx = original.GetPixel(nx, ny);
+                                    rs += npx.R;
+                                    gs += npx.G;
+                                    bs += npx.B;
+                                    count++;
+                                }
+                            }
+                        }
+                        System.Drawing.Color avg = System.Drawing.Color.FromArgb(255, rs / count, gs / count, bs / count);
+                        result.SetPixel(x, y, avg);
+                    }
+                }
+                result.Save(Path.Combine(folder, $"{baseName}_{suffix}.png"));
+            }
+
+            BlockAverage(3, "3x3");
+            BlockAverage(9, "9x9");
+            BlockAverage(16, "16x16");
+            BlockAverage(25, "25x25");
+
+            // special 3x3 compare
+            Bitmap special = new Bitmap(original.Width, original.Height);
+
+            for (int y = 0; y < original.Height; y++) {
+                for (int x = 0; x < original.Width; x++) {
+                    int rs = 0, gs = 0, bs = 0, count = 0;
+
+                    for (int dy = -1; dy <= 1; dy++) {
+                        for (int dx = -1; dx <= 1; dx++) {
+                            int nx = x + dx, ny = y + dy;
+                            if (nx >= 0 && ny >= 0 && nx < original.Width && ny < original.Height) {
+                                System.Drawing.Color npx = original.GetPixel(nx, ny);
+                                rs += npx.R;
+                                gs += npx.G;
+                                bs += npx.B;
+                                count++;
+                            }
+                        }
+                    }
+                    System.Drawing.Color p = original.GetPixel(x, y);
+                    System.Drawing.Color avg = System.Drawing.Color.FromArgb(255, rs / count, gs / count, bs / count);
+                    int r = p.R > avg.R ? 255 : 0;
+                    int g = p.G > avg.G ? 255 : 0;
+                    int b = p.B > avg.B ? 255 : 0;
+                    
+                    special.SetPixel(x, y, System.Drawing.Color.FromArgb(p.A, r, g, b));
+                }
+            }
+            
+            special.Save(Path.Combine(folder, $"{baseName}_special_3x3.png"));
+
+            MessageBox.Show("All filters applied and saved.");
         }
 
         private void btn_5_about_Click(object sender, EventArgs e) {
-
+           
         }
     }
 }
