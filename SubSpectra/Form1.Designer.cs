@@ -1222,11 +1222,11 @@
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1250, 680);
-            Controls.Add(panel_other);
+            Controls.Add(panel_create_image);
+            Controls.Add(panel_create_video);
             Controls.Add(panel_test_image);
             Controls.Add(panel_test_video);
-            Controls.Add(panel_create_video);
-            Controls.Add(panel_create_image);
+            Controls.Add(panel_other);
             Controls.Add(panel_menu);
             FormBorderStyle = FormBorderStyle.None;
             Icon = (Icon) resources.GetObject("$this.Icon");

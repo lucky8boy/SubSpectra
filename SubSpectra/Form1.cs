@@ -223,7 +223,7 @@ namespace SubSpectra {
         }
 
         private void btn_about_Click(object sender, EventArgs e) {
-            string url = "https://google.com";
+            string url = "https://github.com/lucky8boy/SubSpectra/blob/main/README.md";
             Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
 
@@ -1393,7 +1393,8 @@ namespace SubSpectra {
         }
 
         private void btn_5_about_Click(object sender, EventArgs e) {
-           
+            string url = "https://github.com/lucky8boy/SubSpectra/wiki/Filter‐Based-Testing";
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
     }
 }
