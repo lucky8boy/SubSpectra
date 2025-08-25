@@ -2,16 +2,18 @@
 
 [![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white)](#) [![Visual Studio](https://custom-icon-badges.demolab.com/badge/Visual%20Studio-5C2D91.svg?&logo=visualstudio&logoColor=white)](#) [![C#](https://custom-icon-badges.demolab.com/badge/C%23-%23239120.svg?logo=cshrp&logoColor=white)](#)
 
+![Extract message](assets/_1_extract_message.gif)
+
+# To get started use the [Wiki](https://github.com/lucky8boy/SubSpectra/wiki)
+
+---
+
 **SubSpectra** is a Windows desktop app that hides and detects hidden messages in images and videos using **LSB steganography** and forensic statistical tests like **Chi-square** and **RS analysis**.
 
 - Built with C# WinForms  
 - Uses `FFmpeg` + `LibVLCSharp` for video  
 - Exports Excel reports with verdicts  
 - Includes visual filters and bit-level viewers  
-
----
-
-![Extract message](assets/_1_extract_message.gif)
 
 ---
 
@@ -60,15 +62,15 @@
 
 ---
 
-## 🛠 Setup
+## 🛠 [Setup](https://github.com/lucky8boy/SubSpectra/wiki/Getting-Started)
 
-1. ✅ Clone the repository
-2. ✅ Open in **Visual Studio 2022+**
-3. ✅ Restore NuGet packages:
+1.  Clone the repository
+2.  Open in **Visual Studio 2022+**
+3.  Restore NuGet packages:
    - `LibVLCSharp.WinForms`
    - `ClosedXML`
-4. ✅ Ensure `ffmpeg.exe` is accessible (`ffmpeg_path`)
-5. ✅ Build & run (`F5`)
+4.  Ensure `ffmpeg.exe` is accessible (`ffmpeg_path`)
+5.  Build & run (`F5`)
 
 💡 Requires `.NET Framework 4.8+`
 
