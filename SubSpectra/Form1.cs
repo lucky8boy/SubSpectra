@@ -4,8 +4,6 @@ using System.Diagnostics;
 using System.Text;
 using System.Drawing.Imaging;
 using ClosedXML.Excel;
-using MathNet.Numerics.Distributions;
-using System.Windows.Media;
 
 namespace SubSpectra {
     public partial class Form1 : Form {
@@ -1359,8 +1357,6 @@ namespace SubSpectra {
 
             BlockAverage(3, "3x3");
             BlockAverage(9, "9x9");
-            BlockAverage(16, "16x16");
-            BlockAverage(25, "25x25");
 
             // special 3x3 compare
             Bitmap special = new Bitmap(original.Width, original.Height);
